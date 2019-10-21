@@ -32,8 +32,8 @@ class player(object) :
         self.width = width
         self.height = height
         self.is_Jump = False
-        self.jump_height = 20
-        self.vel = 25
+        self.jump_height = 18
+        self.vel = 15
         self.height_of_Jump = -1 * self.jump_height
         self.left = False
         self.right = True
@@ -158,12 +158,11 @@ class enemy(object) :
         if bhuvan.x <= self.x + self.width and bhuvan.x > self.x or bhuvan.x + bhuvan.width >= self.x and bhuvan.x + bhuvan.width <= self.x + self.width:
             if bhuvan.y + bhuvan.height >= self.y and bhuvan.y + bhuvan.height <= self.y + 30 :
                 english.pop(english.index(self))
+                return 2
             else:
                 if (bhuvan.y >= self.y and bhuvan.y <= self.y + self.height) or (bhuvan.y + bhuvan.height >= self.y and bhuvan.y + bhuvan.height <= self.y + self.height) or (bhuvan.y <= self.y and bhuvan.y + bhuvan.height >= self.y + self.height):
-                    for soldier in english:
-                        english.pop(english.index(soldier))
-                    return True
-        return False
+                    return 1
+        return 0
 
 class projectile(object):
     def __init__(self, x, y, width, height, facing, type_of_projectile):
@@ -178,6 +177,7 @@ class projectile(object):
             self.vel = facing * 10
         else:
             self.vel = -1 * 10
+            self.x = self.x - self.width
 
     def draw(self, win):
         if self.facing:
@@ -254,11 +254,16 @@ def redrawWindow():
                 bat.x += bat.vel
             else:
                 bats.pop(bats.index(bat))
-        if soldier.is_Hit(bhuvan):
+        isHit = soldier.is_Hit(bhuvan)
+        if isHit == 1:
             game_over = True
+        elif isHit  == 2:
+            score += 1
         soldier.draw(win)
     bhuvan.draw(win) 
     if game_over:
+        for soldier in english:
+            english.pop(english.index(soldier))
         text = font.render('Game Over', 1, (255,0,0))
         win.blit(text, (display_width/2 - 65, display_height/2))
 
@@ -286,9 +291,24 @@ while run :
         if event.type == pygame.QUIT:
             run = False
 
+    spawnx = random.randint(0, display_width - 36)
+    while abs(spawnx - bhuvan.x) < 50 or abs(spawnx - bhuvan.x + bhuvan.width) < 50:
+        spawnx = random.randint(0, display_width - 36)
+
+    spawny = random.randint(0, display_height - 11 - 60)
+    while abs(spawny - bhuvan.y) < 50 or abs(spawny - bhuvan.y - bhuvan.height) < 50:
+        spawny = random.randint(0, display_height - 11 - 60)
+
+    score_ratio = 0
+    if score ** 2 < 80:
+        score_ratio = score ** 2
+    else:
+        score_ratio = 80
     keys = pygame.key.get_pressed()
-    if (spawn_timer > (200 - (score * 10)) or len(english) == 0) and not game_over:
-        english.append(enemy(36, 60, random.randint(0, display_width - 36), random.randint(0, display_height - 11 - 60)))
+    if (len(english) == 0) and not game_over:
+        english.append(enemy(36, 60, spawnx, spawny))
+    elif spawn_timer > ((100) - (score_ratio)) and not game_over:
+        english.append(enemy(36, 60, spawnx, spawny))
         spawn_timer = 0
     else:
         spawn_timer += 1
@@ -324,7 +344,7 @@ while run :
     if spacebar_spam > 0:
         spacebar_spam += 1
     
-    if spacebar_spam == 10:
+    if spacebar_spam == 5:
         spacebar_spam = 0
 
     for bat in bats:
