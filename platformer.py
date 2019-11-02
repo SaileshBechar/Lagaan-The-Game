@@ -11,17 +11,17 @@ win = pygame.display.set_mode((display_width, display_height))
 
 #Load Sprites
 pygame.display.set_caption("Lagaan")  
-bat_left = pygame.image.load('bat_left.png')
-bat_right = pygame.image.load('bat_right.png')
-bg = pygame.image.load('bg.png')
-standing = pygame.image.load('R1.png')
+bat_left = pygame.image.load('images/bat_left.png')
+bat_right = pygame.image.load('images/bat_right.png')
+bg = pygame.image.load('images/bg.png')
+standing = pygame.image.load('images/R1.png')
 
 #Init clock
 clock = pygame.time.Clock()
 
 #Init Sounds
-hitSound = pygame.mixer.Sound('hit2.wav')
-music = ['ChaleChalo.mp3', 'Ghanan.mp3', 'Mitwa.mp3', 'Radha.mp3']
+hitSound = pygame.mixer.Sound('audio/hit2.wav')
+music = ['audio/ChaleChalo.mp3', 'audio/Ghanan.mp3', 'audio/Mitwa.mp3', 'audio/Radha.mp3']
 musicCounter = 0
 pygame.mixer.music.load(music[musicCounter])
 pygame.mixer.music.play(0)
@@ -30,8 +30,8 @@ score = 0
 run = True
 
 class player(object) :
-    walk_left = [pygame.image.load('L1.png'), pygame.image.load('L2.png')]
-    walk_right = [pygame.image.load('R1.png'), pygame.image.load('R2.png')]
+    walk_left = [pygame.image.load('images/L1.png'), pygame.image.load('images/L2.png')]
+    walk_right = [pygame.image.load('images/R1.png'), pygame.image.load('images/R2.png')]
 
     def __init__(self, x, y, width, height):
         self.x = x
@@ -89,8 +89,8 @@ class player(object) :
                 self.is_Fall = True
 
 class enemy(object) :
-    walk_left = [pygame.image.load('s_l1.png'), pygame.image.load('s_l2.png')]
-    walk_right = [pygame.image.load('s_r1.png'), pygame.image.load('s_r2.png')]
+    walk_left = [pygame.image.load('images/s_l1.png'), pygame.image.load('images/s_l2.png')]
+    walk_right = [pygame.image.load('images/s_r1.png'), pygame.image.load('images/s_r2.png')]
     def __init__(self, width, height, x, y):
         self.width = width
         self.height = height
