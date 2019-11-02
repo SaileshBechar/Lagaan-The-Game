@@ -19,6 +19,13 @@ standing = pygame.image.load('R1.png')
 #Init clock
 clock = pygame.time.Clock()
 
+#Init Sounds
+hitSound = pygame.mixer.Sound('hit2.wav')
+music = ['ChaleChalo.mp3', 'Ghanan.mp3', 'Mitwa.mp3', 'Radha.mp3']
+musicCounter = 0
+pygame.mixer.music.load(music[musicCounter])
+pygame.mixer.music.play(0)
+
 score = 0
 run = True
 
@@ -29,6 +36,7 @@ class player(object) :
     def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
+        self.prev_y = y
         self.width = width
         self.height = height
         self.is_Jump = False
@@ -49,6 +57,7 @@ class player(object) :
             self.walk_count = not self.walk_count
 
     def Jump(self):
+        self.prev_y = self.y
         if self.y > display_height - self.height - 11:
             self.y = display_height - self.height - 11
         if self.is_Jump and not self.is_Fall:
@@ -68,10 +77,11 @@ class player(object) :
                 self.is_Fall = True
     def Fall(self, surface):
         if self.is_Fall:
-            bhuvan.y += bhuvan.vel
-            surface.isHit(bhuvan, "DOWN")
-            if bhuvan.y > display_height - bhuvan.height - 11:
-                bhuvan.y = display_height - bhuvan.height - 11
+            self.prev_y = self.y
+            self.y += self.vel
+            surface.isHit(self, "DOWN")
+            if self.y > display_height - self.height - 11:
+                self.y = display_height - self.height - 11
                 self.is_Fall = False
     def isOnPlatform(self, surface):
         if not self.is_Fall and not self.is_Jump and self.y < display_height - self.height - 11:
@@ -156,7 +166,7 @@ class enemy(object) :
                 self.is_Fall = True
     def is_Hit(self, bhuvan):
         if bhuvan.x <= self.x + self.width and bhuvan.x > self.x or bhuvan.x + bhuvan.width >= self.x and bhuvan.x + bhuvan.width <= self.x + self.width:
-            if bhuvan.y + bhuvan.height >= self.y and bhuvan.y + bhuvan.height <= self.y + 30 :
+            if bhuvan.y + bhuvan.height >= self.y and bhuvan.prev_y + bhuvan.height <= self.y:
                 english.pop(english.index(self))
                 return 2
             else:
@@ -189,7 +199,7 @@ class projectile(object):
     
     def isHit(self, soldier):
         if (self.x >= soldier.x and self.x <= (soldier.x + soldier.width)) or (self.x + self.width >= soldier.x and self.x + self.width <= soldier.x + soldier.width):
-                if (self.y > soldier.y and self.y < (soldier.y + soldier.height)) or (self.y + self.height > soldier.y and self.y + self.height< (soldier.y + soldier.height)) or (self.y >= soldier.y and self.y + self.height <= soldier.y + soldier.height) :
+                if (soldier.y > self.y and soldier.y < (self.y + self.height)) or (soldier.y + soldier.height > self.y and soldier.y + soldier.height < (self.y + self.height)) or (soldier.y <= self.y and soldier.y + soldier.height >= self.y + self.height) :
                     bats.pop(bats.index(self))
                     english.pop(english.index(soldier))
                     return True
@@ -237,10 +247,10 @@ def redrawWindow():
         bhuvan.isOnPlatform(surface)
         bhuvan.Fall(surface)
 
+    bhuvan.Jump()
     for bat in bats:
         bat.draw(win)
 
-    bhuvan.Jump()
     for soldier in english:
         soldier.move(bhuvan.x, bhuvan.y)
         soldier.Jump()
@@ -250,6 +260,7 @@ def redrawWindow():
         for bat in bats:
             if bat.isHit(soldier):
                 score += 1
+                hitSound.play()
             if bat.x > 0 and bat.x < display_width:
                 bat.x += bat.vel
             else:
@@ -258,6 +269,7 @@ def redrawWindow():
         if isHit == 1:
             game_over = True
         elif isHit  == 2:
+            hitSound.play()
             score += 1
         soldier.draw(win)
     bhuvan.draw(win) 
@@ -281,9 +293,11 @@ bats = []
 english = []
 spacebar_spam = 0
 spawn_timer = 0
-english.append(enemy(36, 60, 0, display_height - 11 - 60))
+english.append(enemy(16, 60, 0, display_height - 11 - 60))
 font = pygame.font.SysFont('comicsans', 30, True)
 score = 0
+n_spam = 0
+
 while run :
     clock.tick(27)
 
@@ -306,9 +320,9 @@ while run :
         score_ratio = 80
     keys = pygame.key.get_pressed()
     if (len(english) == 0) and not game_over:
-        english.append(enemy(36, 60, spawnx, spawny))
+        english.append(enemy(16, 60, spawnx, spawny))
     elif spawn_timer > ((100) - (score_ratio)) and not game_over:
-        english.append(enemy(36, 60, spawnx, spawny))
+        english.append(enemy(16, 60, spawnx, spawny))
         spawn_timer = 0
     else:
         spawn_timer += 1
@@ -316,6 +330,20 @@ while run :
     if keys[pygame.K_r]:
         game_over = False
         score = 0
+
+    if n_spam > 0 :
+        n_spam += 1
+    
+    if n_spam == 15 :
+        n_spam = 0
+
+    if keys[pygame.K_n] and n_spam == 0:
+        musicCounter += 1
+        if musicCounter > 3:
+            musicCounter = 0
+        pygame.mixer.music.load(music[musicCounter])
+        pygame.mixer.music.play(-1)
+        n_spam = 1
 
     if keys[pygame.K_RIGHT]:
         bhuvan.right = True
@@ -344,7 +372,7 @@ while run :
     if spacebar_spam > 0:
         spacebar_spam += 1
     
-    if spacebar_spam == 5:
+    if spacebar_spam == 3:
         spacebar_spam = 0
 
     for bat in bats:
@@ -359,7 +387,7 @@ while run :
             bat.x += bat.vel
         else:
             bats.pop(bats.index(bat))
-    if len(bats) < 5 and spacebar_spam == 0:
+    if len(bats) < 7 and spacebar_spam == 0:
         if keys[pygame.K_SPACE]:
             bats.append(projectile(bhuvan.x, bhuvan.y + 35, 87, 13, bhuvan.right, "bat"))
             spacebar_spam = 1
